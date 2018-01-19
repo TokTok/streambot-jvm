@@ -1,0 +1,27 @@
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary")
+
+scala_binary(
+    name = "streambot-jvm",
+    srcs = glob([
+        "src/main/scala/**/*.scala",
+    ]),
+    data = ["//jvm-toxcore-c:libtox4j-c.so"],
+    jvm_flags = ["-Djava.library.path=jvm-toxcore-c"],
+    main_class = "im.tox.streambot.StreamBot",
+    resources = glob([
+        "src/main/resources/**/*",
+    ]),
+    deps = [
+        "//jvm-toxcore-api",
+        "//jvm-toxcore-c",
+        "@com_intellij_annotations//jar",
+        "@log4j_log4j//jar",
+        "@org_bytedeco_javacpp//jar",
+        "@org_bytedeco_javacpp_presets_ffmpeg//jar",
+        "@org_bytedeco_javacpp_presets_ffmpeg_linux_x86_64//jar",
+        "@org_bytedeco_javacpp_presets_opencv//jar",
+        "@org_bytedeco_javacpp_presets_opencv_linux_x86_64//jar",
+        "@org_bytedeco_javacv//jar",
+        "@org_slf4j_slf4j_log4j12//jar",
+    ],
+)
