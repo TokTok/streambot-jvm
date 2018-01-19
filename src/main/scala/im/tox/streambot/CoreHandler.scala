@@ -1,7 +1,7 @@
 package im.tox.streambot
 
 import im.tox.tox4j.ToxEventListener
-import im.tox.tox4j.core.data.{ ToxFriendMessage, ToxFriendNumber }
+import im.tox.tox4j.core.data.{ ToxFriendMessage, ToxFriendNumber, ToxFriendRequestMessage, ToxPublicKey }
 import im.tox.tox4j.core.enums.{ ToxConnection, ToxMessageType }
 
 final class CoreHandler extends ToxEventListener[State] {
@@ -13,6 +13,18 @@ final class CoreHandler extends ToxEventListener[State] {
     } else {
       state
     }
+  }
+
+  override def friendRequest(publicKey: ToxPublicKey, timeDelta: Int, message: ToxFriendRequestMessage)(state: State): State = {
+    state.action { (core, av) =>
+      println(s"Adding friend ${publicKey.toHexString}: ${message.toString}")
+      core.addFriendNorequest(publicKey)
+    }
+  }
+
+  override def selfConnectionStatus(connectionStatus: ToxConnection)(state: State): State = {
+    println(s"Our connection: $connectionStatus")
+    state
   }
 
   override def friendConnectionStatus(friendNumber: ToxFriendNumber, connectionStatus: ToxConnection)(state: State): State = {

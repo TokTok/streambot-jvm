@@ -94,6 +94,8 @@ object StreamBot {
       core.bootstrap("biribiri.org", bootstrapPort, bootstrapKey)
       core.addFriend(address, requestMessage)
       core.setName(name)
+      core.setNospam(0)
+      println(s"Our ToxID: ${core.getAddress.toHexString}")
     }
   }
 
