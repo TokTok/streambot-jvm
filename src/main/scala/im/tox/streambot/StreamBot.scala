@@ -11,6 +11,8 @@ import scala.annotation.tailrec
 import scala.collection.immutable.Queue
 
 object StreamBot {
+  private val friend = "7AA63E40745B73B223A3A62DAC26061727BD5A4E53EB1B75C4E37CF94113DA2AE8039766059B" // iphy
+
   private val RunActionsInterval = 500
 
   private val core = new ToxCoreImpl(
@@ -82,17 +84,16 @@ object StreamBot {
   }
 
   private def initialise(): \/[CoreError, Unit] = {
-    val friendAddress = "7AA63E40745B73B223A3A62DAC26061727BD5A4E53EB1B75C4E37CF94113DA2AE8039766059B"
     val biribiriKey = "F404ABAA1C99A9D37D61AB54898F56793E1DEF8BD46B1038B9D822E8460FAB67"
     for {
       bootstrapPort <- \/.fromEither[im.tox.core.error.CoreError, Port](Port.fromInt(33445).toRight(null))
       bootstrapKey <- ToxPublicKey.fromHexString(biribiriKey)
-      address <- ToxFriendAddress.fromHexString(friendAddress)
+      friendAddress <- ToxFriendAddress.fromHexString(friend)
       requestMessage <- ToxFriendRequestMessage.fromString("Hello!")
       name <- ToxNickname.fromString("StreamBot")
     } yield {
       core.bootstrap("biribiri.org", bootstrapPort, bootstrapKey)
-      core.addFriend(address, requestMessage)
+      core.addFriend(friendAddress, requestMessage)
       core.setName(name)
       core.setNospam(0)
       println(s"Our ToxID: ${core.getAddress.toHexString}")
