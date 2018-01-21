@@ -29,6 +29,12 @@ final class CoreHandler extends ToxEventListener[State] {
 
   override def friendConnectionStatus(friendNumber: ToxFriendNumber, connectionStatus: ToxConnection)(state: State): State = {
     println(s"Friend $friendNumber connection: $connectionStatus")
-    state
+    if (connectionStatus != ToxConnection.NONE) {
+      state.action { (core, av) =>
+        av.call(friendNumber, AvHandler.AudioBitRate, AvHandler.VideoBitRate)
+      }
+    } else {
+      state
+    }
   }
 }

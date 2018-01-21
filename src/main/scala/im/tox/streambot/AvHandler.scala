@@ -4,9 +4,11 @@ import java.io.File
 import java.nio.ShortBuffer
 import java.util
 
+import im.tox.tox4j.av.ToxAv
 import im.tox.tox4j.av.callbacks.ToxAvEventListener
 import im.tox.tox4j.av.data._
 import im.tox.tox4j.av.enums.ToxavFriendCallState
+import im.tox.tox4j.core.ToxCore
 import im.tox.tox4j.core.data.{ ToxFriendMessage, ToxFriendNumber }
 import im.tox.tox4j.core.enums.ToxMessageType
 import org.bytedeco.javacpp.opencv_core._
@@ -15,35 +17,35 @@ import org.bytedeco.javacv.{ FFmpegFrameGrabber, OpenCVFrameConverter }
 
 import scala.annotation.tailrec
 
-final class AvHandler extends ToxAvEventListener[State] {
+object AvHandler {
   private val FrameLength = 1000 / 24
 
-  override def call(friendNumber: ToxFriendNumber, audioEnabled: Boolean, videoEnabled: Boolean)(state: State): State = {
-    println(s"Incoming call from $friendNumber")
-    state.action { (core, av) =>
-      println("Answering call")
-      av.answer(friendNumber, BitRate.fromInt(64).get, BitRate.fromInt(1000 * 1000).get)
+  //private val MediaFile = "I Am Legend - Trailer"
+  private val MediaFile = "BigBuckBunny"
 
-      val media = new File(sys.env("HOME") + "/Downloads/BigBuckBunny.mp4")
-      if (!media.exists()) {
-        core.friendSendMessage(friendNumber, ToxMessageType.NORMAL, 0,
-          ToxFriendMessage.fromString("No media available at this time").toOption.get)
-      } else {
-        core.friendSendMessage(friendNumber, ToxMessageType.NORMAL, 0,
-          ToxFriendMessage.fromString(s"Sending media from file: ${media.getName}").toOption.get)
+  val AudioBitRate: BitRate = BitRate.fromInt(64).get
+  val VideoBitRate: BitRate = BitRate.fromInt(5000).get
 
-        val grabber = new FFmpegFrameGrabber(media.getPath)
-        grabber.start()
+  def sendMedia(core: ToxCore, av: ToxAv, friendNumber: ToxFriendNumber): Unit = {
+    val media = new File(s"${sys.env("HOME")}/Downloads/$MediaFile.mp4")
+    if (!media.exists()) {
+      core.friendSendMessage(friendNumber, ToxMessageType.NORMAL, 0,
+        ToxFriendMessage.fromString("No media available at this time").toOption.get)
+    } else {
+      core.friendSendMessage(friendNumber, ToxMessageType.NORMAL, 0,
+        ToxFriendMessage.fromString(s"Sending media from file: $MediaFile").toOption.get)
 
-        val samplingRate = SamplingRate.Rate48k //.unsafeFromInt(grabber.getSampleRate)
-        val sampleCount = SampleCount(AudioLength.Length60, samplingRate)
-        val channels = AudioChannels.fromInt(grabber.getAudioChannels).get
+      val grabber = new FFmpegFrameGrabber(media.getPath)
+      grabber.start()
 
-        sendFrames(grabber, MediaSink(av, friendNumber, samplingRate, sampleCount, channels))
+      val samplingRate = SamplingRate.Rate48k //.unsafeFromInt(grabber.getSampleRate)
+      val sampleCount = SampleCount(AudioLength.Length60, samplingRate)
+      val channels = AudioChannels.fromInt(grabber.getAudioChannels min 2).get
 
-        core.friendSendMessage(friendNumber, ToxMessageType.NORMAL, 0,
-          ToxFriendMessage.fromString("That's all, folks!").toOption.get)
-      }
+      sendFrames(grabber, MediaSink(av, friendNumber, samplingRate, sampleCount, channels))
+
+      core.friendSendMessage(friendNumber, ToxMessageType.NORMAL, 0,
+        ToxFriendMessage.fromString("That's all, folks!").toOption.get)
     }
   }
 
@@ -115,9 +117,24 @@ final class AvHandler extends ToxAvEventListener[State] {
       sendFrames(grabber, sink)
     }
   }
+}
+
+final class AvHandler extends ToxAvEventListener[State] {
+  override def call(friendNumber: ToxFriendNumber, audioEnabled: Boolean, videoEnabled: Boolean)(state: State): State = {
+    println(s"Incoming call from $friendNumber")
+    state.action { (core, av) =>
+      println("Answering call")
+      av.answer(friendNumber, AvHandler.AudioBitRate, AvHandler.VideoBitRate)
+      AvHandler.sendMedia(core, av, friendNumber)
+    }
+  }
 
   override def callState(friendNumber: ToxFriendNumber, callState: util.EnumSet[ToxavFriendCallState])(state: State): State = {
     println(s"Call state for $friendNumber: $callState")
-    state
+    if (callState.contains(ToxavFriendCallState.ACCEPTING_V)) {
+      state.action(AvHandler.sendMedia(_, _, friendNumber))
+    } else {
+      state
+    }
   }
 }
