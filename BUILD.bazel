@@ -1,4 +1,7 @@
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary")
+load("//tools:project.bzl", "project")
+
+project("streambot-jvm")
 
 scala_binary(
     name = "streambot-jvm",
