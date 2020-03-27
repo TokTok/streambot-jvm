@@ -17,7 +17,6 @@ scala_binary(
     deps = [
         "//jvm-toxcore-api",
         "//jvm-toxcore-c",
-        "@com_intellij_annotations//jar",
         "@log4j_log4j//jar",
         "@org_bytedeco_javacpp//jar",
         "@org_bytedeco_javacpp_presets_ffmpeg//jar",
@@ -25,6 +24,7 @@ scala_binary(
         "@org_bytedeco_javacpp_presets_opencv//jar",
         "@org_bytedeco_javacpp_presets_opencv_platform//jar",
         "@org_bytedeco_javacv//jar",
+        "@org_jetbrains_annotations//jar",
         "@org_slf4j_slf4j_log4j12//jar",
     ],
 )
