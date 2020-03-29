@@ -84,15 +84,15 @@ object StreamBot {
   }
 
   private def initialise(): \/[CoreError, Unit] = {
-    val biribiriKey = "F404ABAA1C99A9D37D61AB54898F56793E1DEF8BD46B1038B9D822E8460FAB67"
+    val initramfsKey = "3F0A45A268367C1BEA652F258C85F4A66DA76BCAA667A49E770BCC4917AB6A25"
     for {
       bootstrapPort <- \/.fromEither[im.tox.core.error.CoreError, Port](Port.fromInt(33445).toRight(null))
-      bootstrapKey <- ToxPublicKey.fromHexString(biribiriKey)
+      bootstrapKey <- ToxPublicKey.fromHexString(initramfsKey)
       friendAddress <- ToxFriendAddress.fromHexString(friend)
       requestMessage <- ToxFriendRequestMessage.fromString("Hello!")
       name <- ToxNickname.fromString("StreamBot")
     } yield {
-      core.bootstrap("biribiri.org", bootstrapPort, bootstrapKey)
+      core.bootstrap("tox.initramfs.io", bootstrapPort, bootstrapKey)
       core.addFriend(friendAddress, requestMessage)
       core.setName(name)
       core.setNospam(0)
