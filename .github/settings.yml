@@ -1,0 +1,19 @@
+---
+_extends: template
+
+repository:
+  name: streambot-jvm
+  description: Video streaming bot for Tox
+  topics: tox, video, streaming
+  has_issues: true
+
+branches:
+  - name: "master"
+    protection:
+      required_status_checks:
+        contexts:
+          - Codacy/PR Quality Review
+          - Travis CI - Pull Request
+          - WIP
+          - code-review/reviewable
+          - license/cla
